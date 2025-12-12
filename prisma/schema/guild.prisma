@@ -1,0 +1,88 @@
+model Guild {
+  id           String        @id // Discord Guild ID (Manual input)
+  name         String?
+  logChannelId String? // Where the bot posts public logs
+  settings     GuildSettings @relation(fields: [guildSettingsId], references: [id])
+  isPremium    Boolean       @default(false)
+
+  incidents          Incident[]
+  whitelistedDomains DomainList[]
+  createdAt          DateTime     @default(now())
+  guildSettingsId    String
+}
+
+model GuildSettings {
+  id             String  @id @default(cuid())
+  prefix         String  @default("!")
+  welcomeChannel String?
+  logChannel     String?
+  // Add other configurable settings here
+  Guild          Guild[]
+}
+
+model DiscordUser {
+  id         String  @id // Discord User ID
+  username   String?
+  trustScore Int     @default(100) // Future feature: "Reputation"
+
+  incidents Incident[] // Incidents this user caused
+  createdAt DateTime   @default(now())
+}
+
+model Incident {
+  id String @id @default(uuid()) // Internal unique case ID
+
+  // Relations
+  guildId     String
+  guild       Guild       @relation(fields: [guildId], references: [id])
+  userId      String
+  discordUser DiscordUser @relation(fields: [userId], references: [id])
+
+  // Event Details
+  type     IncidentType // PHISHING, RAID, TOXICITY
+  severity String // "HIGH", "MEDIUM", "LOW"
+
+  // The Evidence
+  content    String // The message content or URL
+  aiAnalysis Json // Stores the full AI result: { isPhishing: true, confidence: 95, reason: "..." }
+
+  // Status
+  actionTaken ActionType // BAN, KICK, WARN, DELETE
+  status      IncidentStatus @default(OPEN) // OPEN, APPEALED, RESOLVED
+
+  createdAt DateTime @default(now())
+
+  @@index([guildId])
+  @@index([userId])
+}
+
+model DomainList {
+  id      String  @id @default(uuid())
+  domain  String
+  type    String // "WHITELIST" or "BLACKLIST"
+  guildId String? // If null, it's a Global rule. If set, it's Guild-specific.
+  guild   Guild?  @relation(fields: [guildId], references: [id])
+
+  @@unique([domain, guildId])
+}
+
+enum IncidentType {
+  PHISHING
+  TOXICITY
+  SPAM
+  RAID
+}
+
+enum ActionType {
+  BAN
+  KICK
+  MUTE
+  WARN
+  NONE
+}
+
+enum IncidentStatus {
+  OPEN
+  RESOLVED
+  APPEALED
+}
