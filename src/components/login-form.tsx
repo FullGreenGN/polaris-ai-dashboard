@@ -1,18 +1,15 @@
-import { GalleryVerticalEnd } from "lucide-react"
+"use client"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Field,
   FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import {Logo} from "@/components/ui/logo";
 import {siteConfig} from "@/lib/site-config";
 import {FaDiscord} from "react-icons/fa6";
+import {authClient} from "@/lib/auth-client";
 
 export function LoginForm({
   className,
@@ -25,7 +22,9 @@ export function LoginForm({
             <h1 className="text-xl font-bold">Welcome to {siteConfig.title}</h1>
         </div>
         <Field>
-            <Button variant="outline" type="button">
+            <Button onClick={async () => {
+                await authClient.signIn.social({ provider: "discord"})
+            }}>
                 <FaDiscord className={"mr-2 h-4 w-4"} />
                 Continue with Discord
             </Button>
