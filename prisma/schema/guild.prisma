@@ -1,14 +1,17 @@
+// prisma/schema/guild.prisma
 model Guild {
-  id           String        @id // Discord Guild ID (Manual input)
-  name         String?
-  logChannelId String? // Where the bot posts public logs
-  settings     GuildSettings @relation(fields: [guildSettingsId], references: [id])
-  isPremium    Boolean       @default(false)
+  id              String        @id // Discord Guild ID (Manual input)
+  name            String?
+  logChannelId    String? // Where the bot posts public logs
+  guildSettingsId String        @unique
+  settings        GuildSettings @relation(name: "Guild_Settings", fields: [guildSettingsId], references: [id])
+  isPremium       Boolean       @default(false)
 
   incidents          Incident[]
   whitelistedDomains DomainList[]
   createdAt          DateTime     @default(now())
-  guildSettingsId    String
+
+  @@index([guildSettingsId])
 }
 
 model GuildSettings {
@@ -16,8 +19,8 @@ model GuildSettings {
   prefix         String  @default("!")
   welcomeChannel String?
   logChannel     String?
-  // Add other configurable settings here
-  Guild          Guild[]
+
+  guild Guild? @relation(name: "Guild_Settings")
 }
 
 model DiscordUser {
